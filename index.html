@@ -254,7 +254,9 @@ const fmtGap=g=>(g>0?'+':'−')+fmt(Math.abs(g));
 const today=()=>new Date().toISOString().slice(0,10);
 const fdate=d=>d?new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
 const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
-const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+/* stockage propre à cette appli : préfixe obligatoire, car le Carnet Maîtres est sur le même domaine (memed-viry.github.io) */
+const LSP='cnvsec_';
+const ls={get(k){try{return localStorage.getItem(LSP+k)}catch(e){return null}},set(k,v){try{localStorage.setItem(LSP+k,v)}catch(e){}},del(k){try{localStorage.removeItem(LSP+k)}catch(e){}}};
 const pref=(k,d)=>ls.get('p_'+k)||d, setPref=(k,v)=>ls.set('p_'+k,v);
 const round5=x=>Math.ceil((x-1e-6)/5)*5;
 const fmtS=sec=>{const m=Math.floor(sec/60),s=Math.round(sec%60);return m+':'+String(s).padStart(2,'0')};
@@ -972,7 +974,8 @@ function clubClass(){
 /* ---------- grilles ---------- */
 function viewGrilles(){
   const id=me(), s=id?S.sw[id]:null;
-  const sx=ls.get('g_sexe')||(s&&s.sexe)||'F', key=ls.get('g_grid')||(s?keysFor(ageOf(s)).slice(-1)[0]:'U13');
+  let sx=ls.get('g_sexe')||(s&&s.sexe)||'F', key=ls.get('g_grid')||(s?keysFor(ageOf(s)).slice(-1)[0]:'U13');
+  if(sx!=='F'&&sx!=='M') sx='F'; if(!G[key]) key='U13';
   const g=G[key], ages=key==='CN'?(sx==='F'?g.agesF:g.agesM):g.ages, myA=s&&s.sexe===sx?ageOf(s):null;
   const colOf=a=>key==='ELITE'?0:key==='U13'?a-12:key==='U18'?a-14:Math.min(a-14,ages.length-1);
   const hi=myA!=null&&(key==='ELITE'?myA>=14:key==='U13'?(myA>=12&&myA<=13):key==='U18'?(myA>=14&&myA<=18):myA>=14)?colOf(myA):-1;
