@@ -1060,7 +1060,8 @@ function viewEnf(kid){
 
 /* ---------- routeur ---------- */
 const hist=[];
-function route(tok){
+function route(tok){try{routeIn(tok)}catch(e){$('#view').innerHTML=`<div class="empty"><b>Un problème d’affichage est survenu</b>Faites une capture de cet écran et envoyez-la au club.<div class="small" style="margin-top:8px;font-family:var(--f-mono)">${esc(tok)} · ${esc(e&&e.message||e)}</div><div style="margin-top:10px"><button class="btn" onclick="location.reload()">Recharger</button></div></div>`}}
+function routeIn(tok){
   tok=tok||'nageurs';
   const tab=tok==='moi'?'moi':tok==='club'||tok.startsWith('club')?'club':tok==='grilles'?'grilles':tok==='enf'||/^k/.test(tok)?'enf':['entr','zones'].includes(tok)||/^(prog|prof)-/.test(tok)?'entr':'nageurs';
   document.querySelectorAll('nav.bottom [data-go]').forEach(b=>b.setAttribute('aria-current',b.dataset.go===tab?'page':'false'));
