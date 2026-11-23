@@ -469,15 +469,15 @@ function viewSections(){
 }
 
 /* ---------- liste des nageurs ---------- */
-let filt='tous', query='', progEv=null, bestYr=null; const OPEN=new Set();
+let nSex=pref('nSex','tous'), nGrille=pref('nGrille','')==='1', query='', progEv=null, bestYr=null; const OPEN=new Set();
 const me=()=>{const id=ls.get('me');return id&&S.sw[id]?id:null};
 function viewNageurs(){
   if(!SEC){viewSections();return}
   if(SEC==='enf'){go('enf');return}
   const myId=me(), sec=SECL[SEC];
   $('#view').innerHTML=`<div class="sticky-search"><input type="search" id="q" placeholder="Rechercher un nageur (nom, prénom)" autocomplete="off" value="${esc(query)}" aria-label="Rechercher un nageur">
-    <div class="chips" role="group" aria-label="Groupe">${[['all','Tout le club'],...SECTIONS.filter(x=>x.k!=='enf').map(x=>[x.k,x.lab])].map(([k,l])=>`<button class="chip-f" data-sc="${k}" aria-pressed="${SEC===k}">${l}</button>`).join('')}</div>
-    <div class="chips" role="group" aria-label="Filtrer">${[['tous','Filles et garçons'],['F','Filles'],['M','Garçons'],['q','Sous une grille']].map(([k,l])=>`<button class="chip-f" data-f="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div></div>
+    <div class="row" style="flex-wrap:nowrap">${selHTML('nGrp',[['all','Tous les groupes'],...SECTIONS.filter(x=>x.k!=='enf').map(x=>[x.k,x.lab])],SEC&&SECL[SEC]?SEC:'all','Groupe')}${selHTML('nSex',[['tous','Filles et garçons'],['F','Filles'],['M','Garçons']],nSex,'Sexe')}</div>
+    <label class="small" style="display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:600"><input type="checkbox" id="nQ"${nGrille?' checked':''} style="width:20px;height:20px;accent-color:var(--accent)"> Seulement les nageurs sous une grille FFN</label>
     ${myId?'':`<div class="hint"><span>Touchez votre nom puis « C’est moi » : l’onglet <b>Ma fiche</b> s’ouvrira directement sur vos temps.</span></div>`}
     ${ls.get('hideInstall')?'':`<div class="hint" id="instHint"><span><b>Installer sur le téléphone</b> : iPhone, Safari › Partager › « Sur l’écran d’accueil ». Android, Chrome › menu ⋮ › « Ajouter à l’écran d’accueil ».</span><button aria-label="Masquer" id="instX">×</button></div>`}
     <div id="list"></div>
@@ -485,14 +485,15 @@ function viewNageurs(){
   renderList();
   const ix=$('#instX'); if(ix) ix.onclick=()=>{ls.set('hideInstall','1');$('#instHint').remove()};
   $('#q').oninput=e=>{query=e.target.value;renderList()};
-  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filt=b.dataset.f;document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',x===b));renderList()});
-  document.querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{setSec(b.dataset.sc);document.querySelectorAll('[data-sc]').forEach(x=>x.setAttribute('aria-pressed',x===b));renderList()});
+  $('#nSex').onchange=e=>{nSex=e.target.value;setPref('nSex',nSex);renderList()};
+  $('#nQ').onchange=e=>{nGrille=e.target.checked;setPref('nGrille',nGrille?'1':'0');renderList()};
+  $('#nGrp').onchange=e=>{setSec(e.target.value);renderList()};
 }
 function renderList(){
   const words=norm(query).split(/\s+/).filter(Boolean), myId=me();
   let l=swList().filter(s=>words.length?words.every(w=>norm(swName(s)).includes(w)):inSec(s));
-  if(filt==='F'||filt==='M') l=l.filter(s=>s.sexe===filt);
-  if(filt==='q') l=l.filter(s=>summary(s).top);
+  if(nSex==='F'||nSex==='M') l=l.filter(s=>s.sexe===nSex);
+  if(nGrille) l=l.filter(s=>summary(s).top);
   if(myId) l.sort((a,b)=>(b.id===myId)-(a.id===myId));
   $('#list').innerHTML=l.length?`<div class="list">${l.map(s=>{const x=summary(s), a=ageOf(s);
     return `<button class="item" data-sw="${s.id}"><span class="nm">${esc(s.nom)} ${esc(s.prenom)}</span>
